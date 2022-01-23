@@ -27,6 +27,7 @@ type FireworkParticle = {
   vx: number;
   vy: number;
   r: number;
+  type?: number;
   color: { r: number; g: number; b: number };
 };
 function App() {
@@ -71,22 +72,43 @@ function App() {
           });
         }
         const newNodes: FireworkParticle[] = [];
+        let ig = 0;
         for (let n of nodesRef.current) {
+          ig += 1;
           n.life -= 1000 / 60;
+          const lastX = n.x;
+          const lastY = n.y;
           n.x += (n.vx * 1) / 60;
           n.y += (n.vy * 1) / 60;
           n.vy += (1 / 60) * 2 * scaleUnit;
           if (n.life > 0) {
             newNodes.push(n);
             let m = n.life / n.startLife + Math.log2(n.r) * 1;
+            if (n.type === 1) {
+              m *= 0.5 + Math.sin(n.life + ig) / 2 > 0.7 ? 1 : 0;
+            }
             context.globalCompositeOperation = "lighter";
-            context.fillStyle = `rgba(${Math.floor(
-              n.color.r * 255 * m
-            )},${Math.floor(n.color.g * 255 * m)},${Math.floor(
-              n.color.b * 255 * m
-            )},1)`;
-            let rr = n.r;
-            context.fillRect(n.x - rr / 2, n.y - rr / 2, rr, rr);
+            if (n.type === 1) {
+              context.fillStyle = `rgba(${Math.floor(
+                n.color.r * 255 * m
+              )},${Math.floor(n.color.g * 255 * m)},${Math.floor(
+                n.color.b * 255 * m
+              )},1)`;
+              let rr = n.r;
+              context.fillRect(n.x - rr / 2, n.y - rr / 2, rr, rr);
+            } else {
+              context.strokeStyle = `rgba(${Math.floor(
+                n.color.r * 255 * m
+              )},${Math.floor(n.color.g * 255 * m)},${Math.floor(
+                n.color.b * 255 * m
+              )},1)`;
+              let rr = n.r;
+              context.lineWidth = rr;
+              context.beginPath();
+              context.moveTo(lastX, lastY);
+              context.lineTo(n.x, n.y);
+              context.stroke();
+            }
           } else {
             if (n.r > 1) {
               let nnr = n.r / 2;
@@ -95,20 +117,28 @@ function App() {
                 g: Math.random(),
                 b: Math.random(),
               };
+              let nL = n.startLife / 2;
+              let nT = 0;
+              if (Math.random() < 0.2) {
+                nT = 1;
+                nL = n.startLife;
+              }
               for (let i = 0; i < 100; i++) {
                 let oa = Math.random() * Math.PI * 2;
                 let or = Math.random() + 0.1;
                 let ox = Math.cos(oa) * or;
-                let oy = Math.sin(oa) * or - 1;
+                let oy = Math.sin(oa) * or;
+                let rg = Math.random() + 1;
                 newNodes.push({
                   x: n.x,
                   y: n.y,
-                  vx: ox * scaleUnit + n.vx * 0,
-                  vy: oy * scaleUnit + n.vy * 0,
+                  vx: ox * scaleUnit * rg + n.vx * 0,
+                  vy: oy * scaleUnit * rg - scaleUnit + n.vy * 0,
                   color: c,
                   r: nnr,
-                  life: n.startLife / 2,
-                  startLife: n.startLife / 2,
+                  life: nL,
+                  startLife: nL,
+                  type: nT,
                 });
               }
             }
