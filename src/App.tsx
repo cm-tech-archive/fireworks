@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import classes from "./App.module.scss";
-import * as d3 from "d3";
 import useResizeObserver from "@react-hook/resize-observer";
 import {
   Slider,
