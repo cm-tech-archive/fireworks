@@ -31,6 +31,7 @@ type FireworkParticle = {
   f_type?: number;
   color: { r: number; g: number; b: number };
   split: number[];
+  typ: number[];
   ix: number;
 };
 function App() {
@@ -74,7 +75,8 @@ function App() {
             life: 2000,
             startLife: 2000,
             type: ty,
-            split: [ Math.floor(Math.random() * 2) + 3 ],
+            typ:[ty],
+            split: [ Math.floor(Math.random() * 2) + 6 ],
             ix:0
           });
         }
@@ -123,8 +125,9 @@ function App() {
               n.color.g = Math.random();
               n.color.b = Math.random();
               if (n.split.length < n.ix + 2) {
-                n.split.push(Math.floor(Math.random() * 2) + 3);
+                n.split.push(Math.floor(Math.random() * 2) + (n.ix===0?6:3));
               }
+              
               let nL = n.startLife / 2+Math.random()*n.startLife/8;
               let nT = 0;
               if (Math.random() < 0.2) {
@@ -133,13 +136,24 @@ function App() {
               }
               let tyy = 0;
               if (n.type === 2) {
+                
                 tyy = 2;
+                if (Math.random() < 0.5 && n.ix < 1) {
+                  tyy = 0;
+                }
+              }
+              if (n.typ.length < n.ix + 2) {
+                n.typ.push(tyy);
+              }
+              tyy = n.typ[n.ix + 1];
+              if (n.type === 2 && tyy !== 2) {
+                nnr /= 4;
               }
               let q = Math.random();
               let sp = n.split[n.ix + 1];
               for (let i = 0; i < (n.type===2?sp:100); i++) {
                 let oa = (n.type===2?i/sp+q:Math.random()) * Math.PI * 2;
-                let or = Math.random() + 0.1;
+                let or = (n.type===2?0.4:Math.random()) + 0.1;
                 let ox = Math.cos(oa) * or;
                 let oy = Math.sin(oa) * or;
                 let rg = Math.random() + 1;
@@ -155,7 +169,8 @@ function App() {
                   f_type: nT,
                   type: tyy,
                   split: n.split,
-                  ix:n.ix + 1
+                  ix: n.ix + 1,
+                  typ:n.typ
                 });
               }
             }
