@@ -28,7 +28,10 @@ type FireworkParticle = {
   vy: number;
   r: number;
   type?: number;
+  f_type?: number;
   color: { r: number; g: number; b: number };
+  split: number[];
+  ix: number;
 };
 function App() {
   const containerRef = useRef<HTMLElement>();
@@ -59,16 +62,20 @@ function App() {
         context.fillRect(0, 0, width, height);
         const scaleUnit = height / 10;
 
-        if (Math.random() > 0.5) {
+        if (Math.random() > 0.75) {
+          let ty = Math.random() > 0.05 ? 0 : 2;
           nodesRef.current.push({
             x: Math.random() * width,
             y: height,
             vx: (Math.random() * 2 - 1) * scaleUnit,
             vy: -4 * scaleUnit + (Math.random() * 2 - 1) * scaleUnit * 2,
             color: { r: Math.random(), g: Math.random(), b: Math.random() },
-            r: 2,
+            r: ty===2?16:2,
             life: 2000,
             startLife: 2000,
+            type: ty,
+            split: [ Math.floor(Math.random() * 2) + 3 ],
+            ix:0
           });
         }
         const newNodes: FireworkParticle[] = [];
@@ -84,17 +91,17 @@ function App() {
           if (n.life > 0) {
             newNodes.push(n);
             let m = n.life / n.startLife + Math.log2(n.r) * 1;
-            if (n.type === 1) {
+            if (n.f_type === 1) {
               m *= 0.5 + Math.sin(n.life + ig) / 2 > 0.7 ? 1 : 0;
             }
             context.globalCompositeOperation = "lighter";
-            if (n.type === 1) {
+            if (n.f_type === 1) {
               context.fillStyle = `rgba(${Math.floor(
                 n.color.r * 255 * m
               )},${Math.floor(n.color.g * 255 * m)},${Math.floor(
                 n.color.b * 255 * m
               )},1)`;
-              let rr = n.r;
+              let rr = Math.min(n.r,2);
               context.fillRect(n.x - rr / 2, n.y - rr / 2, rr, rr);
             } else {
               context.strokeStyle = `rgba(${Math.floor(
@@ -102,7 +109,7 @@ function App() {
               )},${Math.floor(n.color.g * 255 * m)},${Math.floor(
                 n.color.b * 255 * m
               )},1)`;
-              let rr = n.r;
+              let rr = Math.min(n.r,2);
               context.lineWidth = rr;
               context.beginPath();
               context.moveTo(lastX, lastY);
@@ -112,19 +119,26 @@ function App() {
           } else {
             if (n.r > 1) {
               let nnr = n.r / 2;
-              const c = {
-                r: Math.random(),
-                g: Math.random(),
-                b: Math.random(),
-              };
-              let nL = n.startLife / 2;
+              n.color.r = Math.random();
+              n.color.g = Math.random();
+              n.color.b = Math.random();
+              if (n.split.length < n.ix + 2) {
+                n.split.push(Math.floor(Math.random() * 2) + 3);
+              }
+              let nL = n.startLife / 2+Math.random()*n.startLife/8;
               let nT = 0;
               if (Math.random() < 0.2) {
                 nT = 1;
-                nL = n.startLife;
+                nL = n.startLife*0.75+Math.random()*n.startLife/4;
               }
-              for (let i = 0; i < 100; i++) {
-                let oa = Math.random() * Math.PI * 2;
+              let tyy = 0;
+              if (n.type === 2) {
+                tyy = 2;
+              }
+              let q = Math.random();
+              let sp = n.split[n.ix + 1];
+              for (let i = 0; i < (n.type===2?sp:100); i++) {
+                let oa = (n.type===2?i/sp+q:Math.random()) * Math.PI * 2;
                 let or = Math.random() + 0.1;
                 let ox = Math.cos(oa) * or;
                 let oy = Math.sin(oa) * or;
@@ -134,11 +148,14 @@ function App() {
                   y: n.y,
                   vx: ox * scaleUnit * rg + n.vx * 0,
                   vy: oy * scaleUnit * rg - scaleUnit + n.vy * 0,
-                  color: c,
+                  color: n.color,
                   r: nnr,
                   life: nL,
                   startLife: nL,
-                  type: nT,
+                  f_type: nT,
+                  type: tyy,
+                  split: n.split,
+                  ix:n.ix + 1
                 });
               }
             }
